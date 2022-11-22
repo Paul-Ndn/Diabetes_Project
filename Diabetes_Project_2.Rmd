@@ -1,0 +1,1102 @@
+---
+title: |
+  ![](Harvard.png){width=1in,center}  
+  HarvardX - PH125.9x - Data Science
+  \bigbreak
+  Movie Lens Project
+author: "Paul Nardon"
+date: "2022-11-21"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 3
+  html_document: default
+header-includes:
+  \usepackage{float}
+  \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, cache = TRUE, message = FALSE, warning = FALSE, fig.pos = "H")
+```
+
+```{r loading packages}
+if(!require(tinytex)) install.packages("tinytex")
+if(!require(float)) install.packages("float")
+if(!require(caret)) install.packages("caret")
+if(!require(data.table)) install.packages("data.table")
+if(!require(kableExtra)) install.packages("kableExtra")
+if(!require(dplyr)) install.packages("dplyr")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(lubridate)) install.packages("lubridate")
+if(!require(stringr)) install.packages("stringr")
+if(!require(tidyr)) install.packages("tidyr")
+if(!require(GGally)) install.packages("GGally")
+if(!require(ggthemes)) install.packages("ggthemes")
+if(!require(stringr)) install.packages("stringr")
+if(!require(lattice)) install.packages("lattice")
+if(!require(rpart)) install.packages("rpart")
+if(!require(knitr)) install.packages("knitr")
+if(!require(rmarkdown)) install.packages("rmarkdown")
+if(!require(gridExtra)) install.packages("gridExtra")
+if(!require(ggrepel)) install.packages("ggrepel")
+if(!require(corrplot)) install.packages("corrplot")
+if(!require(reshape2)) install.packages("reshape2")
+if(!require(dslabs)) install.packages("dslabs")
+if(!require(rpart.plot)) install.packages("rpart.plot")
+if(!require(randomForest)) install.packages("randomForest")
+if(!require(Rborist)) install.packages("Rborist")
+if(!require(tree)) install.packages("tree")
+if(!require(devtools)) install.packages("devtools", type = "win.binary")
+if(!require(plotrix)) install.packages("plotrix")
+if(!require(reprtree)) install.packages("reprtree")
+
+library(tinytex)
+library(float)
+library(caret)
+library(data.table)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(stringr)
+library(tidyr)
+library(GGally)
+library(ggthemes)
+library(stringr)
+library(lattice)
+library(rpart)
+library(knitr)
+library(rmarkdown)
+library(gridExtra)
+library(ggrepel)
+library(corrplot)
+library(reshape2)
+library(dslabs)
+library(rpart.plot)
+library(randomForest)
+library(Rborist)
+library(tree)
+library(devtools)
+library(plotrix)
+library(reprtree)
+```
+
+\newpage
+
+# Abstract
+
+\bigbreak
+This project aims to build the best predictive model to evaluate the risk that a patient has diabetes.  
+\newline
+We used plethora of models in order to obtain the best efficiency.  
+\newline
+In order to train and evaluate our different predictive models, we have work on a data set from the National Institute of Diabetes and Digestive and Kidney Diseases. 
+It should be specified that all patients contained into this data set are females at least 21 years old of Pima indian heritage.
+\bigbreak
+We build six models which are :  
+- Generalized Linear model;  
+- Generalized Additive Model using LOESS;  
+- kNN model;  
+- Classification tree model;  
+- Random Forest model;  
+- Random Forest model with Rborist method.
+\bigbreak
+Our different models have got an accuracy between 0.77 and 0.82 while the F1_score is between 0.83 and 0.87. The efficiency of our predictive algorithm model are satisfactory.  
+However, these results these results should be qualified with regard to the few observations contained in the data set.  
+it should also be noted that the data set contained a lot of missing value.
+\newpage
+
+# Introduction
+
+Diabetes is a disease that affects a large number of people around the world. Diabetes is a disorder of assimilation, use and storage of sugars provided by food. This results in a high blood glucose level
+There are two types of diabetes :  
+- type 1 diabetes : The body no longer recognizes these beta cells and destroys them (beta cells are destroyed by antibodies and immune cells, lymphocytes, made by the body). It is said to be a disease autoimmune. The glucose that cannot enter the cells returns to the blood. The blood glucose level then rises.  
+\newline
+- type 2 diabetes : Overweight, obesity and lack of physical activity are the telltale cause of type 2 diabetes in genetically predisposed people.  
+Two abnormalities are responsible for hyperglycemia:  
+- either the pancreas still produces insulin but not enough, compared to blood sugar: this is insulinopenia;  
+- either this insulin acts badly, we then speak of insulin resistance.
+\bigbreak
+The principles causes of diabetes are :  
+- A genetic origin;  
+- An unbalanced diet;  
+- Lack of physical activity; 
+- Overweight.
+\bigbreak
+The objective of this study is to predict whether a patient has diabetes or not.
+
+\bigbreak
+This report is composed of 3 parts. In the first part, we will describe the data set and we will make some reprocessing to prepare data for our predictive machine learning algorithms.  
+In the second part, we will analyze the distribution and characteristics of each variable from data visualization and data analysis to understand the relations between them and build different algorithms models.  
+In the last part of this report, we will build different models based on the analysis of the database.
+\newpage
+
+# Part I - Data structure and data reprocessing
+
+In this part one, we will start by loading the data set from which we will build our predictive algorithm models.
+
+```{r}
+dataset<- read.csv("https://github.com/Paul-Ndn/Diabetes_Project/blob/2e6b49bb9a48b2763da0dd9f9b3f74744bbb3b9a/diabetes.csv", sep = ",")
+
+```
+
+
+```{r}
+load("object_dataset.Rdata")
+
+dataset<- as_tibble(dataset)
+```
+
+After loading the data set, we will describe his structure and reprocessing their data which we will used for data analyzing and visualization (cf. part II - Data analyzing and visualization) and for building our predictive algorithm models (cf. Part III - Predictive algorithm models).
+
+## A - Analyzing the structure of the data set
+
+The data set is composed of 768 observations and 9 variables which are :  
+\newline
+- "Pregnancies" which corresponds to the number of pregnancies by woman;  
+- "Glucose" which represents the quantity of glucose in blood;  
+- "BloodPressure" which corresponds to the Diastolic blood pressure ($mm/Hg$);  
+- "SkinThickness " which represents the triceps skin fold thickness ($mm$);  
+- "Insulin" which corresponds to the level of insulin in blood $\mu U/ml$;  
+- "BMI" which represents the body mass index (BMI);  
+- "DiabetesPedigreeFunction" which corresponds to a function which scores likelihood of diabetes based on family history;  
+- "Age" which represents the age of the patient;  
+- "Outcome" which correspond to the result of a diabetes test. A result of 0 means that the patient has not diabetes while a result of 1 means the patient has diabetes.
+
+```{r}
+head(dataset) %>% knitr::kable(caption = "An overview of the data set") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+```
+
+## B - Data reprocessing
+
+After having verify there wasn't NAS's values into the data set, we will reprocess data of each variable and create new data sets in order to can used them for, firstly, data analysis and visualization, and, on the other hand, training and evaluate our predictive algorithm models.
+
+We will create box plot in order to find inconsistent values (i.e. outlier). We can make an assumption according to which the physiologically impossible values will be replace by NA value in the data set.
+
+In order to save all the reprocessing that we are making, we will creat a new data frame whose name is "dataset_reprocessing".
+
+```{r}
+dataset_reprocessing<- dataset
+```
+
+
+### B.1 - Reprocessing of the Pregnancies variable 
+
+The box plot below shows us there is not value which is physiologically impossible.
+
+```{r, out.width= "60%", fig.align='center'}
+dataset %>% ggplot(aes(Pregnancies)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+
+### B.2 - Reprocessing of the Glucose variable
+
+We are looking for inconsistent data by making a box plot. We can see there is an outlier equal to 0. 
+
+```{r, out.width= "60%", fig.align='center'}
+dataset %>% ggplot(aes(Glucose)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+This last one is associated to 6 observations of the data set. A patient who would have a quantity of glucose equal to 0 would mean he would be die. We will give them the value of NA.
+
+```{r}
+dataset[which(dataset$Glucose == boxplot.stats(dataset$Glucose)$out),] %>%
+  knitr::kable(caption = "An overview of the observations associated to the outlier") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+```
+
+```{r}
+    ### We will replace 0 by NA
+dataset_reprocessing$Glucose[dataset_reprocessing$Glucose == 0]<- NA
+```
+
+
+### B.3 - Reprocessing of the Blood pressure variable
+
+We do the same for the blood pressure variable. We will highlight the fact there are a lot of outliers for which the values are equal to 0, 24, 30, 108, 110, 114 and 122.  
+We will replace observations for which the distolic blood pressure is equal to 0 by NA in order to it is physiologically impossible. The patients having this value would be die.
+
+```{r, out.width= "60%", fig.align='center'}
+dataset %>% ggplot(aes(BloodPressure)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+```{r}
+    ### We will replace 0 by NA
+dataset_reprocessing$BloodPressure[dataset_reprocessing$BloodPressure == 0]<- NA
+```
+
+### B.4 - Reprocessing of the triceps skin fold thickness variable
+
+The boxplot below show us there is an outlier equal to 99 $mm$. We can also see there are plethora observation equal to 0 (i.e. 227 observations). We will replace them by NA.
+
+```{r, out.width= "60%", fig.align='center'}
+dataset %>% ggplot(aes(SkinThickness)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+```{r}
+dataset_reprocessing$SkinThickness[dataset_reprocessing$SkinThickness == 0]<- NA
+```
+
+### B.5 - Reprocessing of the insulin variable
+
+The analysis of the inconsistent data by making a box plot highligths the fact there are a lot of of outliers and the fact there are 374 observations for which the level of insulin in blood is equal to 0 $\mu U/ml$. We will replace them by NA in order to it is physiologically impossible. The patients having this value would be die.
+
+```{r, out.width= "60%", fig.align='center'}
+    ### We are looking for inconsistent data by making a box plot
+dataset %>% ggplot(aes(Insulin)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+```{r}
+    ### We will replace 0 by NA
+dataset_reprocessing$Insulin[dataset_reprocessing$Insulin == 0]<- NA
+```
+
+### B.6 - Reprocessing of the BMI variable
+
+we will analyse the outliers by making a boxplot. We will see that there are 6 observations for whicth the BMI is equal to 0. We will replace them by NA.
+
+```{r, out.width= "60%", fig.align='center'}
+    ### We are looking for inconsistent data by making a box plot
+dataset %>% ggplot(aes(BMI)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+```{r}
+    ### We will highlight the observations which correspond to the outlier
+dataset[which(dataset$BMI == boxplot.stats(dataset$BMI)$out),] %>%
+  knitr::kable(caption = "An overview of the observations associated to the outlier equal to zero") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+```
+
+```{r}
+    ### We will replace 0 by NA
+dataset_reprocessing$BMI[dataset_reprocessing$BMI == 0]<- NA
+```
+
+### B.7 - Reprocessing of the diabetes pedigree function
+
+The box plot below show us that there is not a value which is physiologically impossible.
+
+```{r, out.width= "60%", fig.align='center'}
+    ### We are looking for inconsistent data by making a box plot
+dataset %>% ggplot(aes(DiabetesPedigreeFunction)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+### B.8 - Reprocessing of the age variable
+
+The box plot below shows us there is not value which is physiologically impossible.
+
+```{r, out.width= "60%", fig.align='center'}
+### We are looking for inconsistent data by making a box plot
+dataset %>% ggplot(aes(Age)) + geom_boxplot(outlier.color = "red") + theme_classic()
+```
+
+### B.9 Reprocessing of the outcome variable
+
+We will transform data into factor value in order to use them for training and testing our predictive algorithm models.
+
+```{r}
+    ### We will tranform the data of the "outcome" variable into factor value in order to use classification model
+dataset<- dataset %>% mutate(Outcome= as.factor(Outcome))
+dataset_reprocessing<- dataset_reprocessing %>% mutate(Outcome= as.factor(Outcome))
+```
+
+
+# Part II - Data analyzing and data visualization
+
+First of all, we will analyse the distribution of each data set variables in order to understand their structure and make hypothesis on parameters which could influence our predictive algorithm models.  
+Afterwards, we will bring out correlation between variables and observations.
+
+## A - Distribution analysis
+
+We will start by analyzing the number of pregnancies distribution by woman.
+
+### A.1 - Pregnancies distribution
+
+The data analysis of the number of pregnancies by woman show us the mean is about 3.85 while the median is equal to 3. As for her, the standard deviation is equal to 3.37.    
+The best number of pregnancies by woman is equal to 17 while the minimum of pregnancies by woman is equal to 0.
+\bigbreak
+The first quantile is equal to 1 pregnancy. I.e. 25% of women have got less than 1 pregnancy whereas 75% of women have got less than 6 pregnancies (Third quantile) and 90% of them have less than 9 pregnancies.
+
+```{r}
+as.data.frame(quantile(dataset_reprocessing$Pregnancies, c(0.1, .25, 0.5, 0.75, .9, .95))) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the number pregnancies by woman", format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$Pregnancies),2), median= round(median(dataset_reprocessing$Pregnancies),2),
+           mean= round(mean(dataset_reprocessing$Pregnancies),2),
+           standard_deviation= round(sd(dataset_reprocessing$Pregnancies),2), max.= round(max(dataset_reprocessing$Pregnancies),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the number of pregnancies by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 1 - An overview of the distribution of the number of pregnancies by woman.
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+  ## we will represent a density plot of the number of pregnancies
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(Pregnancies)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,17,2)) +
+  labs(title = "Fig. 1.1 - Density curve of the number of pregnancies",x= "Number of pregnancies", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+  ## We will plot an histogram of the number of pregnancies
+x<- dataset_reprocessing %>% group_by(Pregnancies) %>% summarize(number= n())
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(Pregnancies)) + geom_histogram(bins = 50, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,150,25)) + scale_x_continuous(breaks = seq(0,18,1)) +
+  labs(title = "Fig. 1.3 - Histogram of the number of pregnancies",x= "Number of pregnancies", y= "Sum of pregnancies")  + theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+x_nratings<- tableGrob(x, rows = NULL, cols = c("Number of pregnancies", "Sum of pregnancies"), theme = ttheme_minimal())
+```
+
+```{r, include=FALSE}
+a<- grid.arrange(x_hist,x_nratings, ncol= 2, widths= c(9,3))
+```
+
+
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+grid.arrange(x_plot, a)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.2 - Glucose distribution
+
+The data analysis of the quantities of glucose concentration by woman show us the mean is about 122 while the median is equal to 117. As for her, the standard deviation is about 30.    
+The best quantities of glucose concentration by woman is equal to 199 while the minimum is equal to 44.
+\bigbreak
+The first quantile is equal to 86. I.e. 25% of women have got less than 86 whereas 75% of women have got less than 141 quantities of glucose (Third quantile) and 90% of them have less than 167.
+
+```{r}
+  ## We will analyse the principal statistical data of the "Glucose" variable
+
+as.data.frame(quantile(dataset_reprocessing$Glucose, c(0.1, .25, 0.5, 0.75, .9, .95), na.rm = TRUE)) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the quantities of glucose by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$Glucose, na.rm = TRUE),2), median= round(median(dataset_reprocessing$Glucose, na.rm = TRUE),2),
+           mean= round(mean(dataset_reprocessing$Glucose, na.rm = TRUE),2),
+           standard_deviation= round(sd(dataset_reprocessing$Glucose, na.rm = TRUE),2),
+           max.= round(max(dataset_reprocessing$Glucose, na.rm = TRUE),2)) %>% 
+  knitr::kable(caption = "An overview of the principal statistical variables of the quantities of glucose by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 2 - An overview of the distribution of the quantities of glucose by woman.
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+  ## we will represent a density plot of the quantities of glucose by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(Glucose)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,200,25)) +
+  labs(title = "Fig. 2.1 - Density curve of the quantities of glucose by woman",x= "Quantities of glucose", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+  ## We will plot an histogram of the number of pregnancies
+x_hist<- dataset_reprocessing %>% ggplot(aes(Glucose)) + geom_histogram(bins = 100, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,20,2)) + scale_x_continuous(breaks = seq(0,200,25)) +
+  labs(title = "Fig. 2.3 - Histogram of the quantities of glucose by woman",x= "Quantities of glucose", y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x_hist, x_nratings)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.3 - Blood pressure distribution
+
+The data analysis of the diastolic blood pressure by woman show us the mean is about 72 mm/Hg while the median is equal to 72. As for her, the standard deviation is about 12.    
+The best diastolic blood pressure by woman is equal to 122 while the minimum is equal to 24.
+\bigbreak
+The first quantile is equal to 64 mm/Hg. I.e. 25% of women have got less than 64 mm/hg whereas 75% of women have got less than 80 mm/Hg (Third quantile) and 90% of them have less than 88.
+
+```{r}
+  ## We will analyse the principal statistical data of the "Blood pressure" variable
+
+as.data.frame(quantile(dataset_reprocessing$BloodPressure, c(0.1, .25, 0.5, 0.75, .9, .95), na.rm = TRUE)) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the Diastolic blood pressure (mm Hg) by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$BloodPressure, na.rm = TRUE),2), median= round(median(dataset_reprocessing$BloodPressure, na.rm = TRUE),2),
+           mean= round(mean(dataset_reprocessing$BloodPressure, na.rm = TRUE),2),
+           standard_deviation= round(sd(dataset_reprocessing$BloodPressure, na.rm = TRUE),2),
+           max.= round(max(dataset_reprocessing$BloodPressure, na.rm = TRUE),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the Diastolic blood pressure (mm Hg) by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 3 - An overview of the diastolic blood pressure by woman.
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+  ## we will represent a density plot of the blood pressure by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(BloodPressure)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,125,25)) +
+  labs(title = "Fig. 3.1 - Density curve of the diastolic blood pressure by woman",x= "Diastolic blood pressure (mm Hg)", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+  ## We will plot an histogram of the blood pressure by woman
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(BloodPressure)) + geom_histogram(bins = 100, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,50,5)) + scale_x_continuous(breaks = seq(0,125,25)) +
+  labs(title = "Fig. 3.2 - Histogram of the diastolic blood pressure by woman",x= "Diastolic blood pressure (mm Hg)", 
+       y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x, x_hist)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.4 - Triceps skin fold thickness
+
+The data analysis of the  Triceps skin fold thickness by woman shows us the mean is about 29 $mm$ while the median is equal to 29. As for her, the standard deviation is about 10.    
+The most triceps skin fold thickness by woman is equal to 99 $mm$ while the minimum is equal to 7 $mm$.
+\bigbreak
+The first quantile is equal to 22 $mm$. I.e. 25% of women have got less than 22 whereas 75% of women have got less than 36 $mm$ (Third quantile) and 90% of them have less than 42.
+
+```{r}
+  ## We will analyse the principal statistical data of the "SkinThickness" variable
+as.data.frame(quantile(dataset_reprocessing$SkinThickness, c(0.1, .25, 0.5, 0.75, .9, .95), na.rm = TRUE)) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the triceps skinfold thickness (mm) by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$SkinThickness, na.rm = TRUE),2), median= round(median(dataset_reprocessing$SkinThickness, na.rm = TRUE),2),
+           mean= round(mean(dataset_reprocessing$SkinThickness, na.rm = TRUE),2),
+           standard_deviation= round(sd(dataset_reprocessing$SkinThickness, na.rm = TRUE),2),
+           max.= round(max(dataset_reprocessing$SkinThickness, na.rm = TRUE),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the triceps skinfold thickness (mm) by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 4 - An overview of the triceps skin fold thickness by woman.
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+  ## we will represent a density plot of the Triceps skinfold thickness by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(SkinThickness)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,100,25)) +
+  labs(title = "Fig. 4.1 - Density curve of the Triceps skin fold thickness by woman",
+       x= "Triceps skinfold thickness (mm)", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+  ## We will plot an histogram of the Triceps skinfold thickness by woman
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(SkinThickness)) + geom_histogram(bins = 100, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,200,25)) + scale_x_continuous(breaks = seq(0,100,25)) +
+  labs(title = "Fig. 4.2 - Histogram of the Triceps skinfold thickness by woman",x= "Triceps skinfold thickness (mm)", 
+       y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x_hist)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.5 - Insulin level distribution
+
+The data analysis of the insulin by woman show us the mean is about 156 $\mu U/ml$ while the median is equal to 125. As for her, the standard deviation is about 119.    
+The most insulin level by woman is equal to 846 while the minimum is equal to 14 $\mu U/ml$.
+\bigbreak
+The first quantile is equal to 50 $\mu U/ml$. I.e. 25% of women have got less than 50 $\mu U/ml$ whereas 75% of women have got less than 190 $\mu U/ml$ (Third quantile) and 90% of them have less than 292.
+
+```{r}
+  ## We will analyse the principal statistical data of the "Insulin" variable
+as.data.frame(quantile(dataset_reprocessing$Insulin, c(0.1, .25, 0.5, 0.75, .9, .95), na.rm = TRUE)) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the insulin level (mu U/ml) by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$Insulin, na.rm = TRUE),2), median= round(median(dataset_reprocessing$Insulin, na.rm = TRUE),2),
+           mean= round(mean(dataset_reprocessing$Insulin, na.rm = TRUE),2),
+           standard_deviation= round(sd(dataset_reprocessing$Insulin, na.rm = TRUE),2), 
+           max.= round(max(dataset_reprocessing$Insulin, na.rm = TRUE),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the insulin level (mu U/ml) by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 5 - An overview of the insulin level (mu U/ml) by woman
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+## we will represent a density plot of the insulin level by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(Insulin)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,800,50)) +
+  labs(title = "Fig. 5.1 - Density curve of insulin level by woman",
+       x= "Insulin level (mu U/ml)", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+## We will plot an histogram of the insulin level by woman
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(Insulin)) + geom_histogram(bins = 100, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,350,50)) + scale_x_continuous(breaks = seq(0,800,50)) +
+  labs(title = "Fig. 5.2 - Histogram of the insulin level by woman",x= "Insulin level (mu U/ml)", 
+       y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x_hist)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.6 - Body mass index (BMI) distribution
+
+The data analysis of the body mass index by woman show us the mean is about 32 while the median is equal to 32. As for her, the standard deviation is about 7.    
+The best BMI by woman is equal to 67 while the minimum is equal to 18.
+\bigbreak
+The first quantile is equal to 27.50. i.e. 25% of women have got less than 27.50 whereas 75% of women have got less than 37 (Third quantile) and 90% of them have less than 42.
+
+```{r}
+as.data.frame(quantile(dataset_reprocessing$BMI, c(0.1, .25, 0.5, 0.75, .9, .95), na.rm = TRUE)) %>%
+   knitr::kable(caption = "An overview of some quantiles and deciles of the body mass index (BMI) by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$BMI, na.rm = TRUE),2), median= round(median(dataset_reprocessing$BMI, na.rm = TRUE),2),
+           mean= round(mean(dataset_reprocessing$BMI, na.rm = TRUE),2),
+           standard_deviation= round(sd(dataset_reprocessing$BMI, na.rm = TRUE),2), 
+           max.= round(max(dataset_reprocessing$BMI, na.rm = TRUE),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the body mass index (BMI) by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 6 - An overview of the body mass index (BMI) by woman
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+## we will represent a density plot of the BMI by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(BMI)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,60,5)) +
+  labs(title = "Fig. 6.1 - Density curve of the BMI by woman",
+       x= "BMI", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+## We will plot an histogram of the insulin level by woman
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(BMI)) + geom_histogram(bins = 100, color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,60,5)) + scale_x_continuous(breaks = seq(0,60,5)) +
+  labs(title = "Fig. 6.2 - Histogram of the BMI by woman",x= "BMI", 
+       y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x_hist)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.7 - Diabetes pedigree function distribution
+
+The data analysis of diabetes pedigree function by woman show us the mean is about 0.47 while the median is equal to 0.37 As for her, the standard deviation is about 0.33.    
+The best diabetes pedigree function by woman is equal to 2.42 while the minimum is equal to 0.08.
+\bigbreak
+The first quantile is equal to 0.16. I.e. 25% of women have got less than 0.16 whereas 75% of women have got less than 0.62 (Third quantile) and 90% of them have less than 0.88.
+
+```{r}
+## We will analyse the principal statistical data of the "DiabetesPedigreeFunction" variable
+as.data.frame(quantile(dataset_reprocessing$DiabetesPedigreeFunction, c(0.1, .25, 0.5, 0.75, .9, .95))) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the diabetes pedigree function by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$DiabetesPedigreeFunction),2), median= round(median(dataset_reprocessing$DiabetesPedigreeFunction),2),
+           mean= round(mean(dataset_reprocessing$DiabetesPedigreeFunction),2),
+           standard_deviation= round(sd(dataset_reprocessing$DiabetesPedigreeFunction),2), max.= round(max(dataset_reprocessing$DiabetesPedigreeFunction),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the diabetes pedigree function by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig. 7 - An overview of the diabetes pedigree function by woman
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+## we will represent a density plot of the diabetes pedigree function by woman
+
+dataset_reprocessing %>% ggplot(aes(DiabetesPedigreeFunction)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(0,2.5,.25)) +
+  labs(x= "diabetes pedigree function", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.8 - Age distribution
+
+The data analysis of the age by woman show us the mean is about 33 while the median is equal to 29 As for her, the standard deviation is about 12.    
+The most age by woman is equal to 81while the minimum is equal to 21.
+\bigbreak
+The first quantile is equal to 24. I.e. 25% of women have got less than 24 years old whereas 75% of women have got less than 41 (Third quantile) and 90% of them have less than 51.
+
+```{r}
+as.data.frame(quantile(dataset_reprocessing$Age, c(0.1, .25, 0.5, 0.75, .9, .95))) %>%
+  knitr::kable(caption = "An overview of some quantiles and deciles of the age by woman", 
+               format.args = list(big.mark= " ", scientific = FALSE), 
+               col.names = c("Value")) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+data.frame(min.= round(min(dataset_reprocessing$Age),2), median= round(median(dataset_reprocessing$Age),2),
+           mean= round(mean(dataset_reprocessing$Age),2),
+           standard_deviation= round(sd(dataset_reprocessing$Age),2), max.= round(max(dataset_reprocessing$Age),2)) %>%
+  knitr::kable(caption = "An overview of the principal statistical variables of the age by woman", format.args = list(big.mark= " ", scientific = FALSE)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Fig.8 - An overview of the age by woman
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+## we will represent a density plot of the age by woman
+
+x_plot<- dataset_reprocessing %>% ggplot(aes(Age)) + geom_density(kernel= "optcosine", adjust= 1.5, fill= "blue", alpha= .1) + 
+  scale_x_continuous(breaks = seq(20,80,5)) +
+  labs(title = "Fig. 8.1 - Density curve of the age by woman",
+       x= "Age", y= "Frequency") +
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+## We will plot an histogram of the age by woman
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(Age)) + geom_histogram(color= "black", fill= "steelblue", alpha= .1, binwidth = 1) + 
+  scale_y_continuous(breaks = seq(0,70,5)) + scale_x_continuous(breaks = seq(20,80,5)) +
+  labs(title = "Fig. 8.2 - Histogram of the age by woman",x= "Age", 
+       y= "Number of woman")  + 
+  theme_classic() + theme(plot.title = element_text(hjust = 0.5))
+
+
+grid.arrange(x_plot, x_hist)
+
+rm(x_plot, x_hist)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+### A.9 - Outcomes distribution
+
+The data analysis of the outcome by woman highlights the fact that 500 women have not the diabetes while 268 of them are.
+
+Fig. 9 - An overview of the outcome by woman
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+x<- dataset_reprocessing %>% group_by(Outcome) %>% summarize(number= n())
+
+x_hist<- dataset_reprocessing %>% ggplot(aes(Outcome)) + geom_bar(stat = "count", color= "black", fill= "steelblue", alpha= .1) +
+  scale_y_continuous(breaks = seq(0,500,50)) + 
+  labs(x= "Outcomes", y= "Number of outcomes") + theme_classic()
+
+x_nratings<- tableGrob(x, rows = NULL, cols = c("Diabetes", "Number of women"), theme = ttheme_minimal())
+
+grid.arrange(x_nratings, x_hist, nrow= 2, heights= c(2,10))
+
+rm(x, x_hist, x_nratings)
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+## B - Analysys of the correlation between variables
+
+
+The figure below highligth the correlation between variables. We will see that the variable havean impact on the outcome variable. The variable which represents the best correlation with the "outcome" variable is the "glucose" variable.
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12}
+data_cor_2<- dataset_reprocessing %>% mutate(Outcome= as.numeric(Outcome)) %>% as.matrix()
+
+cor_var_2<- data_cor_2 %>% cor(use = "pairwise.complete.obs")
+
+corrplot(cor_var_2, p.mat = cor.mtest(data_cor_2, conf.level= 0.95)$p, sig.level = 0.01, method = "number", type = "upper")
+```
+
+# Part III - Predictive algorithm models
+
+Before building different predictive algorithm models, we will split the data set into a training test and a validation test.  
+he training test will be used to train our predictive algorithms and select the best parameters which we will permit us to evaluate his efficiency.  
+The test set will be used to evaluate our predictive algorithms. It should be noted we remove rows into test set which contains NA's values. It's a requirement in order to use the function "train" of the "Caret" package.
+
+```{r, echo=TRUE}
+# We will split the data set into a training test and a validation test
+# The training test will be used to train our predictive algorithms and 
+#select the best parameters which we will permits us to minimize the RMSE
+# The test set will be used to evaluate our predictive algorithms
+
+## Validation set will be 20% of data set
+set.seed(1, sample.kind="Rounding") # if using R 3.5 or earlier, use `set.seed(1)`
+test_index <- createDataPartition(y = dataset_reprocessing$Outcome, 
+                                  times = 1, p = 0.2, list = FALSE)
+train_set_2 <- dataset_reprocessing[-test_index,]
+test_set_2 <- dataset_reprocessing[test_index,]
+
+rm(test_index) # remove object
+
+invisible(invisible(gc())) # for cleaning memory
+
+test_set_2<- na.omit(test_set_2)
+```
+
+We will start by building a predictive algorithm based on logistic regression.
+
+## A - Generalized Linear model 
+
+We will start by training the algorithm with the GLM method by using the "train" function. We will use all the variables to predict outcomes.  
+Afterwards, we use the "predict" function to predict outcomes from the test set and in relation to the training set.  
+In order to evaluate the efficiency of our model, we will use the "confusionMatrix" function.
+
+```{r, echo=TRUE}
+# We will train the predictive algorithm
+train_glm_2<- train(Outcome ~ ., method= "glm", data = train_set_2, na.action = na.omit)
+
+## We will predict outcome from the test set
+pred_glm_2<- predict(train_glm_2, test_set_2, na.action = na.omit)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_glm_2<- confusionMatrix(pred_glm_2, test_set_2$Outcome)
+
+
+```
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_glm_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.785 and a F1_score equal to 0.852.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- tibble(Model = "Generalized Linear model", Accuracy= acc_glm_2$overall[[1]], F1_score= acc_glm_2$byClass[[7]],
+                         Prevalence= acc_glm_2$byClass[[8]], 
+                         Precision= acc_glm_2$byClass[[5]], Recall= acc_glm_2$byClass[[6]], P_value= acc_glm_2$overall[[6]])
+
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+## B - Generalized Additive Model using LOESS
+
+We will use an another method of logictic regression whose name is "gamloess". We will also use cross validation in order to select the best tune parameter "span" to minimize the error rate of our model.
+
+```{r, echo=TRUE}
+## We will train the predictive algorithm and select the best tune parameters
+train_gamloess_2<- train(Outcome ~ ., method= "gamLoess", data = train_set_2,
+                         tuneGrid= data.frame(span= seq(1, 5, .25), degree= 1),
+                         trControl= trainControl(method = "cv", number = 10, p= 0.9),
+                         na.action = na.omit)
+
+
+
+## We will predict outcome from the test set
+pred_gamloess_2<- predict(train_gamloess_2, test_set_2)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_gamloess_2<- confusionMatrix(pred_gamloess_2, test_set_2$Outcome)
+
+
+```
+
+The figure below highlight results of the cross validation used to select the best tune parameter.
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+## We will represent the best tune parameter
+plot_gamloess_2<- ggplot(train_gamloess_2, highlight = TRUE)  + scale_x_continuous(breaks = seq(1,5, .5))  + theme_classic()
+
+btp_gamloess_2<- tableGrob(train_gamloess_2$bestTune[[1]], cols = "Best tune parameter", rows = NULL, theme = ttheme_minimal())
+
+grid.arrange(btp_gamloess_2,plot_gamloess_2, heights= c(1,12))
+```
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_gamloess_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.785 and a F1_score equal to 0.852.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- bind_rows(results_model_2, tibble(Model = "Generalized Additive Model using LOESS",
+                                                    Accuracy= acc_gamloess_2$overall[[1]], F1_score= acc_gamloess_2$byClass[[7]],
+                                                    Prevalence= acc_gamloess_2$byClass[[8]], 
+                                                    Precision= acc_gamloess_2$byClass[[5]], 
+                                                    Recall= acc_gamloess_2$byClass[[6]], P_value= acc_gamloess_2$overall[[6]]))
+
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+```
+
+## C - kNN model
+
+We will use a knn model and cross validation to select the best tune parameter "k".
+
+```{r, echo=TRUE}
+## We will train the predictive algorithm and select the best tune parameters
+set.seed(1988, sample.kind="Rounding")
+train_knn_2<- train(Outcome ~ ., method= "knn", data = train_set_2,
+                    tuneGrid= data.frame(k= seq(1,50,1)),
+                    trControl= trainControl(method = "cv", number = 10, p= 0.9), 
+                    na.action = na.omit)
+
+## We will predict outcome from the test set
+pred_knn_2<- predict(train_knn_2, test_set_2)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_knn_2<- confusionMatrix(pred_knn_2, test_set_2$Outcome)
+
+
+
+```
+
+The figure below highlight results of the cross validation used to select the best tune parameter.
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+## We will represent the best tune parameter
+plot_knn_2<- ggplot(train_knn_2, highlight = TRUE)  + scale_x_continuous(breaks = seq(0,50, 5))  + theme_classic()
+
+btp_knn_2<- tableGrob(train_knn_2$bestTune[[1]], cols = "Best tune parameter", rows = NULL, theme = ttheme_minimal())
+
+grid.arrange(btp_knn_2,plot_knn_2, heights= c(1,12))
+
+
+```
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_knn_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.797 and a F1_score equal to 0.864.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- bind_rows(results_model_2, 
+                            tibble(Model = "kNN Model", Accuracy= acc_knn_2$overall[[1]], 
+                                   F1_score= acc_knn_2$byClass[[7]],
+                                   Prevalence= acc_knn_2$byClass[[8]], 
+                                   Precision= acc_knn_2$byClass[[5]], Recall= acc_knn_2$byClass[[6]], 
+                                   P_value= acc_knn_2$overall[[6]]))
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position"))
+
+invisible(invisible(gc())) # for cleaning memory
+```
+
+## D - Classification tree model  
+
+We will use a classification model and cross validation in order tho select the best tune parameter "cp".
+
+```{r, echo=TRUE}
+## We will train the predictive algorithm and select the best tune parameters
+set.seed(1988, sample.kind="Rounding")
+train_rpart_2<- train(Outcome ~ ., method= "rpart", data = train_set_2,
+                      tuneGrid= data.frame(cp = seq(0, 0.05, 0.002)),
+                      trControl= trainControl(method = "cv", number = 10, p= 0.9), 
+                      na.action = na.omit)
+
+
+
+## We will predict outcome from the test set
+pred_rpart_2<- predict(train_rpart_2, test_set_2)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_rpart_2<- confusionMatrix(pred_rpart_2, test_set_2$Outcome)
+
+
+```
+
+The figures below show us the result of the cross validation and the decision tree used by the model to predict outcomes.
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+## We will represent the best tune parameter
+plot_rpart_2<- ggplot(train_rpart_2, highlight = TRUE) + theme_classic()
+
+btp_rpart_2<- tableGrob(train_rpart_2$bestTune[[1]], cols = "Best tune parameter", rows = NULL, theme = ttheme_minimal())
+
+grid.arrange(btp_rpart_2,plot_rpart_2, heights= c(1,12))
+
+
+```
+
+```{r, out.width= "100%", fig.width= 12, fig.height= 12, fig.align='center'}
+## We will represent the decision tree of this model
+rpart.plot(train_rpart_2$finalModel, type = 3, clip.right.labs = FALSE)
+```
+
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_rpart_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.822 and a F1_score equal to 0.873.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- bind_rows(results_model_2,
+                            tibble(Model = "Classification tree model", 
+                                   Accuracy= acc_rpart_2$overall[[1]], F1_score= acc_rpart_2$byClass[[7]],
+                                   Prevalence= acc_rpart_2$byClass[[8]], Precision= acc_rpart_2$byClass[[5]], 
+                                   Recall= acc_rpart_2$byClass[[6]], P_value= acc_rpart_2$overall[[6]]))
+
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position")) 
+```
+
+## E - Random Forest model 
+
+We will use a random forest model and cross validation in order to select the best tune parameter "mtry".
+
+```{r, echo=TRUE}
+## We will train the predictive algorithm and select the best tune parameters
+set.seed(1988, sample.kind="Rounding")
+train_rf_2<- train(Outcome ~ ., method= "rf", data = train_set_2,
+                   ntree= 100,
+                   tuneGrid= data.frame(mtry= seq(1:50)),
+                   trControl= trainControl(method = "cv", number = 10, p= 0.9), na.action = na.omit)
+
+
+
+## We will predict outcome from the test set
+pred_rf_2<- predict(train_rf_2, test_set_2)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_rf_2<- confusionMatrix(pred_rf_2, test_set_2$Outcome)
+
+
+
+```
+
+The figure below shows us the result of the cross validation.
+
+```{r, out.width= "60%", fig.width= 12, fig.height= 12, fig.align='center'}
+## We will represent the best tune parameter
+plot_rf_2<- ggplot(train_rf_2, highlight = TRUE) + theme_classic()
+
+btp_rf_2<- tableGrob(train_rf_2$bestTune[[1]], cols = "Best tune parameter", rows = NULL, theme = ttheme_minimal())
+
+grid.arrange(btp_rf_2,plot_rf_2, heights= c(1,12))
+```
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_rf_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.772 and a F1_score equal to 0.839.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- bind_rows(results_model_2,
+                            tibble(Model = "Random Forest model", 
+                                   Accuracy= acc_rf_2$overall[[1]], F1_score= acc_rf_2$byClass[[7]],
+                                   Prevalence= acc_rf_2$byClass[[8]], Precision= acc_rf_2$byClass[[5]], 
+                                   Recall= acc_rf_2$byClass[[6]], P_value= acc_rf_2$overall[[6]]))
+
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position")) 
+```
+
+## F - Random Forest model with Rborist method  
+
+We will use the random forest principle with Rborist method and croos validation to select the best tune parameters "minNode" and "predFixed".
+
+```{r, echo=TRUE}
+## We will train the predictive algorithm and select the best tune parameters
+set.seed(1988, sample.kind="Rounding")
+train_rborist_2<- train(Outcome ~ ., method= "Rborist", data = train_set_2,
+                        tuneGrid= data.frame(minNode= seq(1:10), predFixed= seq(1:50)),
+                        trControl= trainControl(method = "cv", number = 10, p= 0.9), 
+                        na.action = na.omit)
+
+## We will represent the best tune parameter
+train_rborist_2$finalModel$tuneValue %>%
+  knitr::kable(caption = "The best Tune parameter") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+## We will predict outcome from the test set
+pred_rborist_2<- predict(train_rborist_2, test_set_2)
+
+## We will use "confusionMatrix" to evaluate the model
+acc_rborist_2<- confusionMatrix(pred_rborist_2, test_set_2$Outcome)
+
+
+
+```
+
+
+The table below compares the predictions with the real outcomes from the data set.
+
+```{r}
+## We represent the prediction vs outcomes contained in the data set
+
+acc_rborist_2$table %>% knitr::kable(caption = "The outcomes of the prediction") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+The table below shows us the different indicator of the predictive algorithm model. We will see an accuracy equal to 0.772 and a F1_score equal to 0.839.
+
+```{r}
+## We will save the results of the model into a data frame
+results_model_2<- bind_rows(results_model_2,
+                            tibble(Model = "Random Forest model with Rborist method ", 
+                                   Accuracy= acc_rborist_2$overall[[1]], F1_score= acc_rborist_2$byClass[[7]],
+                                   Prevalence= acc_rborist_2$byClass[[8]], Precision= acc_rborist_2$byClass[[5]], 
+                                   Recall= acc_rborist_2$byClass[[6]], P_value= acc_rborist_2$overall[[6]]))
+
+results_model_2 %>% knitr::kable(caption = "An abstract of the results of the different models") %>% 
+  kable_styling(latex_options = c("scale_down","HOLD_position")) 
+```
+
+# Conclusion
+
+Our different models have got an accuracy between 0.77 and 0.82 while the F1_score is between 0.83 and 0.87. The efficiency of our predictive algorithm model are satisfactory.  
+However, these results these results should be qualified with regard to the few observations contained in the data set.  
+it should also be noted that the data set contained a lot of missing value.
